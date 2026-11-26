@@ -54,3 +54,21 @@ final class SessionSafetyTests: XCTestCase {
         await waitFor("signed out") { store.current == nil }
     }
 }
+
+/// A fresh install starts signed out (Keychain items outlive an uninstall; Android's data doesn't).
+final class FreshInstallTests: XCTestCase {
+    func testAFreshInstallForgetsSessionsLeftInTheKeychainButOnlyOnce() throws {
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: "fresh-install-test"))
+        defaults.removePersistentDomain(forName: "fresh-install-test")
+        let keychain = MemoryStore()
+        keychain.write(Data("old".utf8), account: AppEnvironment.staging.key)
+        keychain.write(Data("old".utf8), account: AppEnvironment.production.key)
+        forgetSessionsFromAnEarlierInstall(keychain, defaults: defaults)
+        XCTAssertNil(keychain.read(AppEnvironment.staging.key))
+        XCTAssertNil(keychain.read(AppEnvironment.production.key))
+        // Later launches keep the sign-in.
+        keychain.write(Data("new".utf8), account: AppEnvironment.staging.key)
+        forgetSessionsFromAnEarlierInstall(keychain, defaults: defaults)
+        XCTAssertNotNil(keychain.read(AppEnvironment.staging.key))
+    }
+}

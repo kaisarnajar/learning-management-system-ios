@@ -4,10 +4,11 @@ import SwiftUI
 @main
 struct DarseQuranApp: App {
     @State private var container: AppContainer
+    private let testing = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
 
     init() {
         // Unit tests run inside the app: give them a container that touches neither the Keychain nor the network.
-        let testing = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+        if !testing { forgetSessionsFromAnEarlierInstall(KeychainStore(), defaults: .standard) }
         _container = State(initialValue: testing ? AppContainer(secureStore: MemoryStore(), defaults: UserDefaults(suiteName: "tests") ?? .standard) : AppContainer())
         Self.styleSystemControls()
     }
@@ -25,6 +26,11 @@ struct DarseQuranApp: App {
     }
 
     @ViewBuilder private var root: some View {
+        // Unit tests build their own screens: the app's own (and its requests to the server) stay out of the way.
+        if testing { Color.clear } else { appRoot }
+    }
+
+    @ViewBuilder private var appRoot: some View {
         #if DEBUG
         if ProcessInfo.processInfo.environment["DQA_GALLERY"] == "1" { DesignGallery() } else { AppRoot() }
         #else

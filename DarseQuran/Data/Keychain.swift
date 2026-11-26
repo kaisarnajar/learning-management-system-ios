@@ -43,6 +43,16 @@ struct KeychainStore: SecureStore {
     }
 }
 
+/// Keychain items outlive the app: after it is deleted and installed again, the last sign-in would come straight back.
+/// Like Android (where uninstalling wipes the app's data), a fresh install starts signed out on every server. The mark
+/// lives in UserDefaults, which an uninstall does remove.
+func forgetSessionsFromAnEarlierInstall(_ store: SecureStore, defaults: UserDefaults) {
+    let key = "installed"
+    guard !defaults.bool(forKey: key) else { return }
+    AppEnvironment.allCases.forEach { store.delete($0.key) }
+    defaults.set(true, forKey: key)
+}
+
 /// In-memory store for tests.
 final class MemoryStore: SecureStore, @unchecked Sendable {
     private var items: [String: Data] = [:]
