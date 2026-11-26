@@ -419,6 +419,21 @@ struct SkeletonBlock: View {
     }
 }
 
+/// Renders a [Load] with the standard loading and error states (Android's LoadContent).
+struct LoadContent<T, Content: View>: View {
+    let state: Load<T>
+    let onRetry: () -> Void
+    @ViewBuilder var content: (T) -> Content
+
+    var body: some View {
+        switch state {
+        case .loading: SkeletonList()
+        case .failed(let message): ErrorState(message: message, onRetry: onRetry)
+        case .ready(let value): content(value)
+        }
+    }
+}
+
 // MARK: - content
 
 /// Arabic text set in Amiri, right to left, centred.
