@@ -22,18 +22,55 @@ struct PayState {
 /// The choices made on the pay screen, kept apart from the screen (Android's SavedStateHandle): paying sends the student
 /// to their UPI app, and they must come back to the same waiver, month and year, or the transaction id they paid with
 /// would be submitted for another month or amount.
+///
+/// With [defaultsKey] the choices are also written to UserDefaults, so they survive iOS ending the app while the student
+/// is in their UPI app (iOS starts it again from Home; opening the same payment brings the choices back). They are
+/// forgotten once the payment is submitted.
 @MainActor
 final class PaySavedState {
     private(set) var values: [String: any Sendable] = [:]
+    private let defaultsKey: String?
+    private let defaults: UserDefaults
 
-    init(_ values: [String: any Sendable] = [:]) { self.values = values }
+    init(_ values: [String: any Sendable] = [:]) {
+        self.values = values
+        defaultsKey = nil
+        defaults = .standard
+    }
+
+    /// The saved choices of one payment (a course and fee type), read back from [defaults].
+    init(defaultsKey: String, defaults: UserDefaults = .standard) {
+        self.defaultsKey = defaultsKey
+        self.defaults = defaults
+        for (key, value) in defaults.dictionary(forKey: defaultsKey) ?? [:] {
+            if let s = value as? String { values[key] = s } else if let n = value as? Int { values[key] = n }
+        }
+    }
 
     subscript(key: String) -> (any Sendable)? {
         get { values[key] }
-        set { values[key] = newValue }
+        set {
+            values[key] = newValue
+            persist()
+        }
     }
 
     func contains(_ key: String) -> Bool { values[key] != nil }
+
+    /// Forgets every choice (after the payment was submitted).
+    func clear() {
+        values = [:]
+        if let defaultsKey { defaults.removeObject(forKey: defaultsKey) }
+    }
+
+    private func persist() {
+        guard let defaultsKey else { return }
+        let plist = values.compactMapValues { v -> Any? in (v as? String) ?? (v as? Int) }
+        if plist.isEmpty { defaults.removeObject(forKey: defaultsKey) } else { defaults.set(plist, forKey: defaultsKey) }
+    }
+
+    /// The UserDefaults key of the payment for [courseId] and fee [type].
+    static func key(courseId: String, type: String) -> String { "pay.saved.\(courseId).\(type)" }
 }
 
 /// The fee payment flow (Android's PayViewModel).
@@ -123,7 +160,7 @@ final class PayModel {
         let repo = repo
         return Task {
             switch await repo.submitPayment(fields: fields, screenshot: screenshot) {
-            case .success: state.submitting = false; state.done = true
+            case .success: state.submitting = false; state.done = true; saved.clear()
             case .failure(let e): state.submitting = false; state.submitError = e.message
             }
         }
@@ -153,7 +190,9 @@ struct PayScreen: View {
     let type: String
     let title: String
     var body: some View {
-        WithModel({ PayModel(repo: $0.repo, courseId: courseId, type: type) }) { model in
+        WithModel({
+            PayModel(repo: $0.repo, courseId: courseId, type: type, saved: PaySavedState(defaultsKey: PaySavedState.key(courseId: courseId, type: type)))
+        }) { model in
             PayContent(model: model, courseTitle: title)
         }
     }

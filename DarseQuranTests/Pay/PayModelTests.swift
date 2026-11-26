@@ -77,6 +77,22 @@ final class PayModelTests: XCTestCase {
         XCTAssertEqual("2026", saved["year"] as? String)
     }
 
+    func testChoicesSurviveTheAppBeingEndedAndAreForgottenAfterPaying() throws {
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: "pay-saved-test"))
+        defaults.removePersistentDomain(forName: "pay-saved-test")
+        let key = PaySavedState.key(courseId: "c1", type: "course")
+        let before = PaySavedState(defaultsKey: key, defaults: defaults)
+        before["couponId"] = "waiver-50"; before["month"] = 3; before["year"] = "2025"
+        // The app is started again: a new pay screen for the same payment reads the choices back.
+        let after = PaySavedState(defaultsKey: key, defaults: defaults)
+        XCTAssertEqual("waiver-50", after["couponId"] as? String)
+        XCTAssertEqual(3, after["month"] as? Int)
+        XCTAssertEqual("2025", after["year"] as? String)
+        XCTAssertNil(PaySavedState(defaultsKey: PaySavedState.key(courseId: "c2", type: "course"), defaults: defaults)["month"])
+        after.clear()
+        XCTAssertNil(PaySavedState(defaultsKey: key, defaults: defaults)["couponId"])
+    }
+
     func testPaymentDetailsThatFailToLoadAreReportedAndCanBeRetried() async {
         settingsFail.value = true
         let vm = await model()
