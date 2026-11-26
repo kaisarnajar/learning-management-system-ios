@@ -92,17 +92,22 @@ final class APIClient: Sendable {
     // MARK: - raw
 
     /// The URL of an API path ("courses/1" → https://host/api/v1/courses/1), or an absolute URL as given.
-    func url(_ path: String, query: [String: String?] = [:]) -> URL {
+    /// Throws URLError(.badURL) for a path that can't be made into a URL even percent-encoded (a server-supplied file path
+    /// with spaces or Urdu letters is encoded; Android's OkHttp throws inside the call the same way, never crashes).
+    func url(_ path: String, query: [String: String?] = [:]) throws -> URL {
         let base: String
         if path.hasPrefix("http://") || path.hasPrefix("https://") { base = path }
         else if path.hasPrefix("/") { base = CurrentEnvironment.baseUrl + path }
         else { base = CurrentEnvironment.baseUrl + "/api/v1/" + path }
-        var components = URLComponents(string: base)!
+        guard var components = URLComponents(string: base)
+            ?? base.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed).flatMap(URLComponents.init(string:))
+        else { throw URLError(.badURL) }
         let items = query.compactMap { key, value in value.map { URLQueryItem(name: key, value: $0) } }.sorted { $0.name < $1.name }
         if !items.isEmpty { components.queryItems = (components.queryItems ?? []) + items }
         // "+" in a query value is a space to most servers: encode it.
         components.percentEncodedQuery = components.percentEncodedQuery?.replacingOccurrences(of: "+", with: "%2B")
-        return components.url!
+        guard let url = components.url else { throw URLError(.badURL) }
+        return url
     }
 
     /// Sends a request and returns the body of a 2xx answer; anything else throws [HTTPError].
@@ -113,7 +118,7 @@ final class APIClient: Sendable {
 
     /// [send], also returning the response (for downloads that need the file name or type).
     func sendWithResponse(_ method: String, _ path: String, query: [String: String?] = [:], body: RequestBody = .none) async throws -> (Data, HTTPURLResponse) {
-        var request = URLRequest(url: url(path, query: query))
+        var request = URLRequest(url: try url(path, query: query))
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         switch body {
@@ -165,6 +170,8 @@ final class APIClient: Sendable {
         // would send the new environment's token to the old server.
         guard let url = request.url, isAcademyServer(url) else { return try checked(payload, response) }
         guard let fresh = await refresher.freshToken(used: used) else { return try checked(payload, response) }
+        // The refused answer is dropped (for a download, [body] also removes its temporary file).
+        _ = body(payload)
         request.setValue("Bearer \(fresh)", forHTTPHeaderField: "Authorization")
         let (retryPayload, retryResponse) = try await load(request)
         return try checked(retryPayload, retryResponse)
@@ -179,7 +186,7 @@ final class APIClient: Sendable {
     /// Downloads a GET answer straight to a temporary file (receipts and course attachments can be large; Android
     /// streams them too). The caller moves the file where it belongs.
     func downloadToFile(_ path: String, query: [String: String?] = [:]) async throws -> (URL, HTTPURLResponse) {
-        var request = URLRequest(url: url(path, query: query))
+        var request = URLRequest(url: try url(path, query: query))
         request.httpMethod = "GET"
         let session = self.session
         return try await authorized(request, load: { request in
