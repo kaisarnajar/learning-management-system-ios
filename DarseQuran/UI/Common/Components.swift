@@ -27,7 +27,7 @@ struct BackTopBar<Actions: View>: View {
             Spacer(minLength: 8)
             HStack(spacing: 0) { actions() }.padding(.trailing, 4)
         }
-        .frame(height: 64)
+        .frame(minHeight: 64) // grows with large text sizes instead of clipping the title
         .padding(.leading, 4)
         .background(Scheme.background)
     }
@@ -48,7 +48,7 @@ struct TabTopBar<Actions: View>: View {
             Text(title).textStyle(Typo.titleLarge).foregroundStyle(Scheme.onSurface).accessibilityAddTraits(.isHeader)
             HStack { Spacer(); HStack(spacing: 0) { actions() }.padding(.trailing, 4) }
         }
-        .frame(height: 64)
+        .frame(minHeight: 64) // grows with large text sizes instead of clipping the title
         .frame(maxWidth: .infinity)
         .background(Scheme.background)
     }

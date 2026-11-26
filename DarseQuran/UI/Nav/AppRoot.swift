@@ -10,13 +10,8 @@ struct AppRoot: View {
 
     var body: some View {
         let shell = Shell.of(container.session?.user.role)
-        VStack(spacing: 0) {
-            if container.environment != .production {
-                EnvironmentStrip(env: container.environment)
-            }
-            AppContent(shell: shell)
-                .id("\(container.environment.key)-\(shell.rawValue)-\(container.session?.user.id ?? "guest")")
-        }
+        AppContent(shell: shell)
+            .id("\(container.environment.key)-\(shell.rawValue)-\(container.session?.user.id ?? "guest")")
         .background(Scheme.background)
         .overlay { ToastOverlay() }
         .task { await container.loadConfig() }
@@ -31,6 +26,16 @@ private struct AppContent: View {
     init(shell: Shell) { _nav = State(initialValue: Navigator(shell: shell)) }
 
     var body: some View {
+        VStack(spacing: 0) {
+            if container.environment != .production {
+                EnvironmentStrip(env: container.environment) { nav.push(.server) }
+            }
+            tabs
+        }
+        .environment(nav)
+    }
+
+    private var tabs: some View {
         ZStack(alignment: .bottom) {
             ForEach(nav.shell.tabs, id: \.self) { tab in
                 TabStack(tab: tab)
@@ -61,14 +66,15 @@ private struct AppContent: View {
         .onChange(of: container.googleWelcomePending, initial: true) { _, pending in
             if pending { container.googleWelcomePending = false; nav.push(.editProfile) }
         }
-        .onChange(of: phase) { _, new in if new == .active { container.refreshUserIfStale() } }
+        // Android's onStart: on every return to the app, cold launch included.
+        .onChange(of: phase, initial: true) { _, new in if new == .active { container.refreshUserIfStale() } }
         // Light status bar text over a dark hero; on staging the amber strip sits there instead (always light).
         .onChange(of: nav.heroUnderStatusBar || container.environment != .production, initial: true) { _, light in
             StatusBar.light = light
         }
         .onOpenURL { url in
             guard let path = pathForIncomingURL(url) else { return }
-            if !nav.openHref(path) { nav.toast("This page isn't in the app yet.") }
+            if !nav.openHref(path) { nav.toast("This section opens on the website for now.") }
         }
     }
 }
@@ -86,6 +92,7 @@ private struct TabStack: View {
                         .toolbar(.hidden, for: .navigationBar)
                 }
                 .toolbar(.hidden, for: .navigationBar)
+                .background(EdgeSwipeBack())
         }
     }
 }
@@ -177,6 +184,9 @@ struct BottomBar: View {
                             .textStyle(Typo.labelMedium)
                             .foregroundStyle(selected ? Scheme.secondary : Scheme.onSurfaceVariant)
                             .lineLimit(1)
+                            // The bar keeps its 80pt (the screens above are padded by it): the labels stop growing
+                            // where they would no longer fit.
+                            .dynamicTypeSize(...DynamicTypeSize.xxLarge)
                     }
                     .frame(maxWidth: .infinity, minHeight: Self.height)
                     .contentShape(Rectangle())
@@ -212,16 +222,15 @@ struct TabItem {
 }
 
 /// A thin band above everything while the debug build is on staging, so test data is never mistaken for real.
-/// Tapping it opens the Server screen.
+/// Tapping it opens the Server screen on top of the current tab (Android pushes ServerRoute).
 struct EnvironmentStrip: View {
     let env: AppEnvironment
-    @Environment(AppContainer.self) private var container
-    @State private var showServer = false
+    let onOpen: () -> Void
 
     var body: some View {
-        Button { showServer = true } label: {
+        Button(action: onOpen) {
             HStack(spacing: 6) {
-                Icon.server.image.font(.system(size: 10, weight: .semibold))
+                Icon.server.image.font(.system(size: 12, weight: .semibold)).frame(width: 14, height: 14) // Android: 14dp
                 Text("\(env.label.uppercased()) · \(env.host)").textStyle(Typo.labelSmall).lineLimit(1).truncationMode(.tail)
             }
             .foregroundStyle(.white)
@@ -231,21 +240,23 @@ struct EnvironmentStrip: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Connected to \(env.label) server. Opens server settings.")
-        .sheet(isPresented: $showServer) {
-            NavigationStack { ServerScreen(onClose: { showServer = false }) }
-                .environment(container)
-        }
     }
 }
 
-// Keeps the edge swipe back working while the system navigation bar is hidden (the app draws its own top bars).
-extension UINavigationController: @retroactive UIGestureRecognizerDelegate {
-    override open func viewDidLoad() {
-        super.viewDidLoad()
-        interactivePopGestureRecognizer?.delegate = self
-    }
+/// Keeps the edge swipe back working while the system navigation bar is hidden (the app draws its own top bars). It
+/// reaches only the tab's own navigation controller, never the system's (camera, Quick Look, share sheet).
+private struct EdgeSwipeBack: UIViewControllerRepresentable {
+    func makeUIViewController(context: Context) -> Controller { Controller() }
+    func updateUIViewController(_ controller: Controller, context: Context) {}
 
-    public func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
-        viewControllers.count > 1
+    final class Controller: UIViewController, UIGestureRecognizerDelegate {
+        override func viewWillAppear(_ animated: Bool) {
+            super.viewWillAppear(animated)
+            navigationController?.interactivePopGestureRecognizer?.delegate = self
+        }
+
+        func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+            (navigationController?.viewControllers.count ?? 0) > 1
+        }
     }
 }
