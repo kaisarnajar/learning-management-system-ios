@@ -83,6 +83,8 @@ func upiLaunchUri(_ settings: PaymentSettings, amountPaise: Int, note: String) -
         URLQueryItem(name: "cu", value: "INR"),
         URLQueryItem(name: "tn", value: String(note.prefix(60))),
     ]
+    // URLQueryItem leaves "+" as it is, which UPI apps read as a space; Uri.Builder sends it as %2B.
+    c.percentEncodedQuery = c.percentEncodedQuery?.replacingOccurrences(of: "+", with: "%2B")
     return c.url
 }
 
@@ -113,6 +115,19 @@ func qrMatrix(_ text: String) -> [[Bool]]? {
     return out
 }
 
+/// The last QR code built, so a screen that redraws doesn't build it again each time (Android: remember(text)).
+@MainActor
+private enum QrCache {
+    private static var last: (text: String, matrix: [[Bool]])?
+
+    static func matrix(_ text: String) -> [[Bool]] {
+        if let last, last.text == text { return last.matrix }
+        let matrix = qrMatrix(text) ?? []
+        last = (text, matrix)
+        return matrix
+    }
+}
+
 /// Draws [text] as a QR code, dark modules on white whatever the theme, so every UPI app can scan it.
 struct QrCode: View {
     let text: String
@@ -120,7 +135,7 @@ struct QrCode: View {
     var size: CGFloat = 220
 
     var body: some View {
-        let matrix = qrMatrix(text) ?? []
+        let matrix = QrCache.matrix(text)
         Canvas { context, canvasSize in
             guard !matrix.isEmpty else { return }
             let cell = canvasSize.width / CGFloat(matrix.count)

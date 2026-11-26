@@ -69,6 +69,11 @@ final class LaunchUpiTests: XCTestCase {
         XCTAssertEqual(["pa": "academy@upi", "pn": "Darse Quran Academy", "am": "500.00", "cu": "INR", "tn": "Course fee"], values)
         XCTAssertNil(upiLaunchUri(PaymentSettings(upiId: " "), amountPaise: 100, note: "x"))
     }
+
+    func testAPlusInTheNoteReachesTheUpiAppAsAPlus() throws {
+        let url = try XCTUnwrap(upiLaunchUri(settings, amountPaise: 100, note: "Tajweed + Fiqh"))
+        XCTAssertTrue(url.absoluteString.contains("tn=Tajweed%20%2B%20Fiqh"), url.absoluteString)
+    }
 }
 
 /// Android's PaymentConfirmFieldsTest: the reference keeps only letters and digits. Rendered in a window and typed into
