@@ -1,9 +1,10 @@
 import Foundation
 
 /*
- * Lenient decoding, as Android's Json { coerceInputValues = true }: a field with a default that is missing, null or of
- * the wrong type decodes as its default instead of failing the whole answer. So the server can grow without breaking
- * installed apps.
+ * Lenient decoding, as Android's Json { coerceInputValues = true }: a field with a default that is missing or null
+ * decodes as its default instead of failing the whole answer, so the server can grow without breaking installed apps.
+ * A value of the wrong type still fails, as on Android ("The server's answer wasn't what this app expects"): a price
+ * sent as text must not show as "Free", and one bad course must not empty the whole list.
  *
  *     @Default<Empty.Text> var description: String
  *     @Default<Zero> var priceInrPaise: Int
@@ -23,7 +24,7 @@ struct Default<D: DefaultValue>: Codable, Sendable, Hashable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
-        wrappedValue = (try? container.decode(D.Value.self)) ?? D.defaultValue
+        wrappedValue = container.decodeNil() ? D.defaultValue : try container.decode(D.Value.self)
     }
 
     func encode(to encoder: Encoder) throws {
@@ -35,7 +36,7 @@ struct Default<D: DefaultValue>: Codable, Sendable, Hashable {
 extension KeyedDecodingContainer {
     /// A missing key gives the default (the synthesized init would otherwise throw keyNotFound).
     func decode<D>(_ type: Default<D>.Type, forKey key: Key) throws -> Default<D> {
-        (try? decodeIfPresent(type, forKey: key)) ?? Default()
+        try decodeIfPresent(type, forKey: key) ?? Default()
     }
 }
 

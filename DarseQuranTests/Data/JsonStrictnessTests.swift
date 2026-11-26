@@ -32,6 +32,13 @@ final class JsonStrictnessTests: XCTestCase {
         XCTAssertEqual(3600, try decode(TokenResponse.self, #"{"accessToken":"a","refreshToken":"r"}"#).expiresIn)
     }
 
+    func testAValueOfTheWrongTypeIsReportedNotReplacedByTheDefault() {
+        // A price sent as text would otherwise show as "Free" (Android throws too; ApiCall reports it).
+        XCTAssertThrowsError(try decode(Course.self, #"{"id":"c1","title":"Tajweed","priceInrPaise":"34900"}"#))
+        // One bad course fails the answer instead of emptying the list.
+        XCTAssertThrowsError(try decode(HomeResponse.self, #"{"courses":[{"id":"c1","title":"Tajweed"},{"id":"c2"}]}"#))
+    }
+
     func testARequiredFieldStillHasToBeThere() {
         XCTAssertThrowsError(try decode(Course.self, #"{"id":"c1"}"#))
         XCTAssertThrowsError(try decode(Course.self, #"{"id":"c1","title":null}"#))
