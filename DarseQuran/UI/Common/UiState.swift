@@ -95,6 +95,7 @@ final class Submitter {
 struct ReloadOnReturn: ViewModifier {
     let reload: () -> Void
     @State private var appeared = false
+    @State private var visible = false
     @State private var away = false
     @Environment(\.scenePhase) private var phase
 
@@ -103,11 +104,14 @@ struct ReloadOnReturn: ViewModifier {
             .onAppear {
                 if appeared, away { away = false; reload() }
                 appeared = true
+                visible = true
             }
-            .onDisappear { away = true }
+            .onDisappear { visible = false; away = true }
             .onChange(of: phase) { _, new in
                 if new == .background { away = true }
-                if new == .active, away, appeared { away = false; reload() }
+                // A screen covered by another one still sees the app come back; like Android (where it stays
+                // CREATED) it waits until it is shown again, so popping back to it still reloads.
+                if new == .active, away, appeared, visible { away = false; reload() }
             }
     }
 }
