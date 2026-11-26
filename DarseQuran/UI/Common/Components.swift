@@ -170,6 +170,7 @@ struct AppCard<Content: View>: View {
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: Radius.card, style: .continuous)
         let card = VStack(alignment: .leading, spacing: 0) { content() }
+            .environment(\.fieldSurface, color)
             .padding(padding)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(color, in: shape)
