@@ -317,7 +317,7 @@ private struct MoneyBookOrderFinanceCard: View {
         AppCard(padding: 14) {
             HStack(alignment: .top, spacing: 8) {
                 VStack(alignment: .leading, spacing: 0) {
-                    Text("#\(r.orderNumber ?? "null") · \(formatDate(r.orderDate))").textStyle(Typo.titleSmall).foregroundStyle(Scheme.onSurface)
+                    Text("\(r.orderNumber.map { "#\($0) · " } ?? "")\(formatDate(r.orderDate))").textStyle(Typo.titleSmall).foregroundStyle(Scheme.onSurface)
                     Text(r.customerName ?? "").textStyle(Typo.bodyMedium).foregroundStyle(Scheme.onSurface)
                     Text(r.customerEmail ?? "").textStyle(Typo.bodySmall).foregroundStyle(Scheme.onSurfaceVariant)
                 }

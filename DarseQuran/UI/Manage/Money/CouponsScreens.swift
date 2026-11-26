@@ -233,7 +233,7 @@ private struct MoneyCouponCard: View {
             MoneyInfoLine("Valid", "\(formatCalendarDate(c.validFrom)) – \(formatCalendarDate(c.validUntil))")
             MoneyInfoLine("Course", c.courseTitle ?? "All Courses")
             MoneyInfoLine("Gender", c.gender.map { titleCase($0) })
-            MoneyInfoLine("For", c.user.map { "\($0.name ?? "null") (\($0.email))" })
+            MoneyInfoLine("For", c.user.map { u in u.name.map { "\($0) (\(u.email))" } ?? u.email })
             MoneyInfoLine("Applies to", c.applyToLabel)
             HStack(spacing: 0) {
                 Spacer()
