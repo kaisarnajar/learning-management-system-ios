@@ -60,6 +60,7 @@ final class AppContainer {
         sessionStore.observe { [weak self] value in
             Task { @MainActor in self?.sessionChanged(value) }
         }
+        Task { await ImageLoader.shared.useAuthorizedFetch { [client] url in try await client.authorizedData(url) } }
         cartOwnerChanged()
         #if DEBUG
         signInFromLaunchEnvironment()
@@ -84,6 +85,7 @@ final class AppContainer {
         if value?.user.id != previous {
             // A different user (sign-out, another account, another environment) must not find the last one's documents.
             DocumentCache.clear()
+            ImageLoader.shared.forgetMemory()
             cartOwnerChanged()
         }
     }

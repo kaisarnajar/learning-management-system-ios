@@ -8,6 +8,16 @@ actor ImageLoader {
     nonisolated(unsafe) private let memory = NSCache<NSURL, UIImage>()
     private var running: [URL: Task<UIImage?, Never>] = [:]
     private let session: URLSession
+    /// Fetches a private picture as the signed-in user (set by AppContainer to its APIClient).
+    private var authorized: (@Sendable (URL) async throws -> Data)?
+
+    func useAuthorizedFetch(_ fetch: @escaping @Sendable (URL) async throws -> Data) { authorized = fetch }
+
+    /// Private pictures (payment screenshots) need the viewer's token, and must not go into the shared disk cache.
+    nonisolated static func isPrivate(_ url: URL) -> Bool { url.path.hasPrefix("/api/files/private/") }
+
+    /// Forgets the pictures in memory (another user signed in: they must not see the last one's private pictures).
+    nonisolated func forgetMemory() { memory.removeAllObjects() }
 
     init() {
         let config = URLSessionConfiguration.default
@@ -23,10 +33,18 @@ actor ImageLoader {
         if let hit = memory.object(forKey: url as NSURL) { return hit }
         if let task = running[url] { return await task.value }
         let session = self.session
+        let authorized = Self.isPrivate(url) ? self.authorized : nil
         let task = Task<UIImage?, Never> {
-            guard let (data, response) = try? await session.data(from: url),
-                  (response as? HTTPURLResponse).map({ (200..<300).contains($0.statusCode) }) ?? true,
-                  let image = UIImage(data: data) else { return nil }
+            let bytes: Data?
+            if let authorized {
+                bytes = try? await authorized(url)
+            } else if let (data, response) = try? await session.data(from: url),
+                      (response as? HTTPURLResponse).map({ (200..<300).contains($0.statusCode) }) ?? true {
+                bytes = data
+            } else {
+                bytes = nil
+            }
+            guard let bytes, let image = UIImage(data: bytes) else { return nil }
             // Decode now, off the main thread, so scrolling doesn't stutter.
             return image.preparingForDisplay() ?? image
         }

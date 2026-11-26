@@ -130,6 +130,14 @@ final class APIClient: Sendable {
         return try await perform(request)
     }
 
+    /// GETs [url] as the signed-in user (the token goes to the academy server only), for private pictures such as payment
+    /// screenshots, which `/api/files/private/...` refuses without it (Android's Coil uses the same authorized client).
+    func authorizedData(_ url: URL) async throws -> Data {
+        var request = URLRequest(url: url)
+        request.cachePolicy = .reloadIgnoringLocalCacheData
+        return try await perform(request).0
+    }
+
     private func perform(_ original: URLRequest) async throws -> (Data, HTTPURLResponse) {
         try await authorized(original, load: load, body: { $0 })
     }
