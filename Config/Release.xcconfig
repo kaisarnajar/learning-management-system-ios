@@ -1,0 +1,6 @@
+// Release: the published app. Production only; the staging URL is not in the binary.
+#include "Shared.xcconfig"
+
+PRODUCT_BUNDLE_IDENTIFIER = com.darsequran.academy
+APP_DISPLAY_NAME = Darse Quran Academy
+STAGING_BASE_URL =

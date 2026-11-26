@@ -1,0 +1,7 @@
+// Debug: the developer's own build. Starts on staging, can switch to production in Account → Server.
+#include "Shared.xcconfig"
+
+PRODUCT_BUNDLE_IDENTIFIER = com.darsequran.academy.debug
+APP_DISPLAY_NAME = DQA (debug)
+STAGING_BASE_URL = $(STAGING_BASE_URL_OVERRIDE:default=$(STAGING_BASE_URL_DEFAULT))
+SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG $(inherited)

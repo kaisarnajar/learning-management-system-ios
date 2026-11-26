@@ -1,0 +1,11 @@
+// Copy to Config/Local.xcconfig (git-ignored) and fill in what you need. Every line is optional.
+// In an xcconfig "//" starts a comment, so write URLs as https:/$()/host.
+
+// The staging website the debug build talks to (default: the current Vercel staging deployment).
+// STAGING_BASE_URL_OVERRIDE = https:/$()/staging.example.com
+
+// Google Sign-In: the iOS OAuth client ID, its reversed form (the URL scheme Google calls back on), and the Web
+// client ID (the one Android uses as GOOGLE_WEB_CLIENT_ID).
+// GOOGLE_IOS_CLIENT_ID = 1234567890-ios.apps.googleusercontent.com
+// GOOGLE_REVERSED_CLIENT_ID = com.googleusercontent.apps.1234567890-ios
+// GOOGLE_SERVER_CLIENT_ID = 1234567890-web.apps.googleusercontent.com

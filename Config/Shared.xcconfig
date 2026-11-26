@@ -1,0 +1,20 @@
+// Settings shared by both builds. Per-build values are in Debug.xcconfig and Release.xcconfig; machine-specific
+// ones (staging URL, Google client IDs) in the git-ignored Local.xcconfig, like Android's local.properties.
+
+MARKETING_VERSION = 1.0.0
+CURRENT_PROJECT_VERSION = 1
+IPHONEOS_DEPLOYMENT_TARGET = 17.0
+SWIFT_VERSION = 6.0
+TARGETED_DEVICE_FAMILY = 1
+
+// The current Vercel staging deployment, as Android's default. "//" starts a comment in an xcconfig, hence "/$()/".
+STAGING_BASE_URL_DEFAULT = https:/$()/staging-learning-management-system-teal-ten.vercel.app
+
+// Google Sign-In. Without both IDs the "Continue with Google" button is hidden.
+// GOOGLE_IOS_CLIENT_ID: the iOS OAuth client (Google Cloud). GOOGLE_SERVER_CLIENT_ID: the Web client ID Android uses,
+// so the ID token is issued for the same audience the website's /api/v1/auth/google checks.
+GOOGLE_IOS_CLIENT_ID =
+GOOGLE_SERVER_CLIENT_ID =
+GOOGLE_REVERSED_CLIENT_ID = com.googleusercontent.apps.unset
+
+#include? "Local.xcconfig"
