@@ -232,3 +232,25 @@ func linkTarget(_ href: String, baseUrl: String = CurrentEnvironment.baseUrl) ->
     }
     return .outside(url.string ?? trimmed)
 }
+
+// MARK: - lengths as the website counts them
+
+extension String {
+    /// The length the website's JavaScript (and Kotlin's `length`) sees: UTF-16 code units, so an emoji counts as 2.
+    var jsLength: Int { utf16.count }
+
+    /// The longest start of the text whose [jsLength] is at most [max], never splitting a character (Kotlin's `take`
+    /// counts UTF-16 units too).
+    func jsPrefix(_ max: Int) -> String {
+        guard utf16.count > max else { return self }
+        var used = 0
+        var end = startIndex
+        for c in indices {
+            let n = self[c].utf16.count
+            if used + n > max { break }
+            used += n
+            end = index(after: c)
+        }
+        return String(self[..<end])
+    }
+}

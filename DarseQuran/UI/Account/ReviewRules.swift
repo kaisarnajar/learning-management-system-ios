@@ -26,8 +26,8 @@ enum ReviewField: Hashable { case rating, quote }
 func reviewErrors(_ draft: ReviewDraft) -> [ReviewField: String] {
     var errors: [ReviewField: String] = [:]
     let quote = draft.quote.trimmed
-    if quote.count < reviewQuoteMin { errors[.quote] = "Your review must be at least 20 characters." }
-    if quote.count > reviewQuoteMax { errors[.quote] = "Review must be at most 1000 characters." }
+    if quote.jsLength < reviewQuoteMin { errors[.quote] = "Your review must be at least 20 characters." }
+    if quote.jsLength > reviewQuoteMax { errors[.quote] = "Review must be at most 1000 characters." }
     if !(1...reviewRatingMax).contains(draft.rating) { errors[.rating] = reviewRatingError }
     return errors
 }
@@ -42,7 +42,7 @@ func reviewRequest(_ draft: ReviewDraft) -> ReviewRequest {
 }
 
 /// A fresh form: the location starts as the student's address, as the website pre-fills it.
-func newReviewDraft(_ address: String?) -> ReviewDraft { ReviewDraft(location: String((address ?? "").prefix(reviewFieldMax))) }
+func newReviewDraft(_ address: String?) -> ReviewDraft { ReviewDraft(location: (address ?? "").jsPrefix(reviewFieldMax)) }
 
 /// The website's badge (services/student-reviews.ts reviewStatusLabel, plus "On homepage").
 func reviewStatusLabel(_ review: Review) -> (String, Tone) {

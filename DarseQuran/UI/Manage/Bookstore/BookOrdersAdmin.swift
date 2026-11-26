@@ -233,11 +233,11 @@ private struct BookOrderShipDialog: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Enter shipment details to notify the student.").textStyle(Typo.bodyMedium).foregroundStyle(Scheme.onSurfaceVariant)
             OutlinedField(
-                label: "Courier service name", text: Binding(get: { courier }, set: { courier = String($0.prefix(100)) }),
+                label: "Courier service name", text: Binding(get: { courier }, set: { courier = $0.jsPrefix(100) }),
                 placeholder: "e.g. DTDC, India Post", capitalization: .words, autocorrect: false
             )
             OutlinedField(
-                label: "Tracking ID", text: Binding(get: { tracking }, set: { tracking = String($0.prefix(100)) }),
+                label: "Tracking ID", text: Binding(get: { tracking }, set: { tracking = $0.jsPrefix(100) }),
                 capitalization: .characters, autocorrect: false
             )
         }

@@ -107,12 +107,12 @@ private struct ReviewForm: View {
             OutlinedField(
                 label: "Your review *",
                 text: Binding(get: { model.draft.quote }, set: { text in
-                    model.edit { $0.quote = String(text.prefix(reviewQuoteMax)) }
+                    model.edit { $0.quote = text.jsPrefix(reviewQuoteMax) }
                     touched.formUnion([.quote, .rating])
                 }),
                 placeholder: "Share your experience learning with Darse Quran Academy…",
                 error: shown(.quote),
-                supporting: "\(draft.quote.count)/\(reviewQuoteMax)",
+                supporting: "\(draft.quote.jsLength)/\(reviewQuoteMax)",
                 lines: 4...4
             )
             OptionalField(label: "Course (optional)", placeholder: "e.g. Tajweed, Hifz", value: draft.course) { text in
@@ -162,7 +162,7 @@ private struct OptionalField: View {
     var body: some View {
         OutlinedField(
             label: label,
-            text: Binding(get: { value }, set: { onChange(String($0.prefix(reviewFieldMax))) }),
+            text: Binding(get: { value }, set: { onChange($0.jsPrefix(reviewFieldMax)) }),
             placeholder: placeholder
         )
     }

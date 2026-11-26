@@ -30,15 +30,15 @@ func contactError(_ draft: ContactDraft) -> String? {
     let name = draft.name.trimmed
     let digits = draft.phone.filter(isDigitChar).count
     let message = draft.message.trimmed
-    if name.count < contactNameMin { return "Name must be at least 2 characters." }
-    if name.count > contactNameMax { return "Name must be at most 100 characters." }
+    if name.jsLength < contactNameMin { return "Name must be at least 2 characters." }
+    if name.jsLength > contactNameMax { return "Name must be at most 100 characters." }
     if !isEmail(draft.email.trimmed) { return "Enter a valid email address." }
-    if draft.phone.trimmed.count > contactPhoneMax { return "Phone number is too long." }
+    if draft.phone.trimmed.jsLength > contactPhoneMax { return "Phone number is too long." }
     if !draft.phone.trimmed.isEmpty, !(phoneDigitsMin...phoneDigitsMax).contains(digits) {
         return "Enter a valid phone number with 7 to 15 digits."
     }
-    if message.count < contactMessageMin { return "Your message must be at least 20 characters." }
-    if message.count > contactMessageMax { return "Message must be at most 5000 characters." }
+    if message.jsLength < contactMessageMin { return "Your message must be at least 20 characters." }
+    if message.jsLength > contactMessageMax { return "Message must be at most 5000 characters." }
     return nil
 }
 

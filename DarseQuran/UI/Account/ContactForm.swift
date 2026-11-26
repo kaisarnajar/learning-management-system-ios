@@ -98,7 +98,7 @@ struct ContactForm: View {
         OutlinedField(
             label: "Your message *", text: capped($message, contactMessageMax),
             placeholder: "Tell us about your query — course enrollment, schedules, fees, or anything else…",
-            supporting: "\(message.count)/\(contactMessageMax)", lines: 6...6
+            supporting: "\(message.jsLength)/\(contactMessageMax)", lines: 6...6
         )
         if let error, !message.isEmpty {
             Text(error).textStyle(Typo.bodySmall).foregroundStyle(Brand.danger)
@@ -117,6 +117,6 @@ struct ContactForm: View {
     }
 
     private func capped(_ binding: Binding<String>, _ max: Int) -> Binding<String> {
-        Binding(get: { binding.wrappedValue }, set: { binding.wrappedValue = String($0.prefix(max)) })
+        Binding(get: { binding.wrappedValue }, set: { binding.wrappedValue = $0.jsPrefix(max) })
     }
 }

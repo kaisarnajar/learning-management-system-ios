@@ -225,7 +225,7 @@ private struct InspirationFormContent: View {
         }
         // Arabic is typed right to left; the preview below shows it as the website sets it.
         OutlinedField(
-            label: "Arabic text *", text: Binding(get: { model.arabic }, set: { model.arabic = String($0.prefix(5000)) }),
+            label: "Arabic text *", text: Binding(get: { model.arabic }, set: { model.arabic = $0.jsPrefix(5000) }),
             placeholder: "النص العربي…", capitalization: .never, autocorrect: false, lines: 4...40
         )
         .environment(\.layoutDirection, .rightToLeft)

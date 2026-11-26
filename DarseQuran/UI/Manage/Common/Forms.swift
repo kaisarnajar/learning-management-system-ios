@@ -154,7 +154,7 @@ struct FormTextField: View {
     }
 
     var body: some View {
-        let limited = Binding(get: { text }, set: { new in text = maxLength.map { String(new.prefix($0)) } ?? new })
+        let limited = Binding(get: { text }, set: { new in text = maxLength.map { new.jsPrefix($0) } ?? new })
         OutlinedField(
             label: label, text: limited,
             error: isError ? (supporting ?? "") : nil,

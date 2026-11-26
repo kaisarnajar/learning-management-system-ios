@@ -242,7 +242,7 @@ private struct CheckoutContent: View {
     @ViewBuilder private var deliveryFields: some View {
         OutlinedField(
             label: "Delivery Address",
-            text: Binding(get: { address }, set: { address = String($0.prefix(500)) }),
+            text: Binding(get: { address }, set: { address = $0.jsPrefix(500) }),
             placeholder: "Enter your full address (Street, City, State)...",
             contentType: .fullStreetAddress,
             lines: 3...3

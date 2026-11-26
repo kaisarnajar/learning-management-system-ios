@@ -51,3 +51,17 @@ final class FormatTests: XCTestCase {
         XCTAssertEqual("₹92233720368547758.07", formatInr(Int64.max).replacingOccurrences(of: ",", with: ""))
     }
 }
+
+/// Lengths as the website's JavaScript (and Kotlin) count them: UTF-16 code units.
+final class JsLengthTests: XCTestCase {
+    func testAnEmojiCountsAsTwo() {
+        XCTAssertEqual(2, "😀".jsLength)
+        XCTAssertEqual(5, "ab😀c".jsLength)
+    }
+
+    func testPrefixKeepsWholeCharactersWithinTheLimit() {
+        XCTAssertEqual("ab", "ab😀c".jsPrefix(3)) // the emoji would need units 3 and 4
+        XCTAssertEqual("ab😀", "ab😀c".jsPrefix(4))
+        XCTAssertEqual("abc", "abc".jsPrefix(10))
+    }
+}

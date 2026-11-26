@@ -118,7 +118,7 @@ private struct RegisterContent: View {
             if let error = state.error { Banner(error, tone: .danger) }
             OutlinedField(
                 label: "Full name",
-                text: Binding(get: { name }, set: { name = String($0.prefix(100)) }),
+                text: Binding(get: { name }, set: { name = $0.jsPrefix(100) }),
                 contentType: .name,
                 capitalization: .words,
                 autocorrect: false
@@ -317,7 +317,7 @@ private struct PasswordField: View {
     var body: some View {
         OutlinedField(
             label: label,
-            text: Binding(get: { value }, set: { value = String($0.prefix(128)) }),
+            text: Binding(get: { value }, set: { value = $0.jsPrefix(128) }),
             secure: true,
             contentType: newPassword ? .newPassword : .password,
             submitLabel: .done,

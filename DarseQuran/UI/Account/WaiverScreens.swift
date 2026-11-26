@@ -188,9 +188,9 @@ private struct WaiverForm: View {
             Spacer().frame(height: 10)
             OutlinedField(
                 label: other ? "Please specify reason" : "Additional details (optional)",
-                text: Binding(get: { details }, set: { details = String($0.prefix(waiverDetailsMax)) }),
+                text: Binding(get: { details }, set: { details = $0.jsPrefix(waiverDetailsMax) }),
                 placeholder: other ? "Describe your reason..." : "Add any additional context for your request (optional)...",
-                supporting: "\(details.count)/\(waiverDetailsMax)",
+                supporting: "\(details.jsLength)/\(waiverDetailsMax)",
                 lines: 3...3
             )
             Spacer().frame(height: 10)
