@@ -172,6 +172,11 @@ private struct PolicyConsentRow: View {
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(accepted ? [.isButton, .isSelected] : .isButton)
         .accessibilityAction { accepted.toggle() }
+        // Combined into one element, the two links would be out of VoiceOver's reach: offer them as actions.
+        .accessibilityActions {
+            Button("Terms & Conditions") { openWeb(termsUrl) }
+            Button("Privacy Policy") { openWeb(privacyUrl) }
+        }
     }
 
     private var consentText: AttributedString {
