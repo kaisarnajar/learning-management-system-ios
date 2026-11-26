@@ -60,13 +60,21 @@ struct ServerScreen: View {
 }
 
 /// A plain request: the app's own client would send this server's sign-in token to the other one.
-private func ping(_ env: AppEnvironment) async -> Health {
-    guard let url = URL(string: env.baseUrl + "/api/v1/app-config") else { return .down("No URL") }
+/// One session for every ping (no cookies or cache), giving up after 8 seconds in all, like Android's callTimeout.
+private let pingSession: URLSession = {
     let config = URLSessionConfiguration.ephemeral
     config.timeoutIntervalForRequest = 8
+    config.timeoutIntervalForResource = 8
+    return URLSession(configuration: config)
+}()
+
+private func ping(_ env: AppEnvironment) async -> Health {
+    var base = env.baseUrl
+    while base.hasSuffix("/") { base.removeLast() }
+    guard let url = URL(string: base + "/api/v1/app-config") else { return .down("No URL") }
     let started = Date()
     do {
-        let (_, response) = try await URLSession(configuration: config).data(from: url)
+        let (_, response) = try await pingSession.data(from: url)
         let ms = Int(Date().timeIntervalSince(started) * 1000)
         let status = (response as? HTTPURLResponse)?.statusCode ?? 0
         return (200..<300).contains(status) ? .up(ms: ms) : .down("HTTP \(status)")
