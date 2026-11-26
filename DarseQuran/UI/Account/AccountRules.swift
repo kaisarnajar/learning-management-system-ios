@@ -43,8 +43,9 @@ let profileIncompleteText = "The academy needs your full details for course regi
 
 // MARK: - verification resend
 
-/// The website's VerificationBanner states: idle, sending, or the answer to the last resend.
-struct ResendState: Equatable {
+/// The website's VerificationBanner states: idle, sending, or the answer to the last resend (Account and Home share it,
+/// as on Android).
+struct ResendState: Equatable, Sendable {
     var sending = false
     var sent = false
     var message: String? = nil

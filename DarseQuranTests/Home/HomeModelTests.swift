@@ -78,8 +78,8 @@ final class HomeModelTests: XCTestCase {
         let sent = vm.resend
         vm.resendVerification() // and after it was sent
         try await Task.sleep(for: .milliseconds(200))
-        XCTAssertEqual(homeResendLabel(sent), "Sent")
-        XCTAssertEqual(sent.message, homeVerificationSent)
+        XCTAssertEqual(resendLabel(sent), "Sent")
+        XCTAssertEqual(sent.message, verificationSent)
         XCTAssertEqual(backend.lock.withLock { backend.resends }, 1)
     }
 
@@ -90,13 +90,13 @@ final class HomeModelTests: XCTestCase {
         await waitUntil { vm.resend.message != nil }
         let failed = vm.resend
         XCTAssertFalse(failed.sent)
-        XCTAssertEqual(homeResendLabel(failed), "Resend Verification Email")
+        XCTAssertEqual(resendLabel(failed), "Resend Verification Email")
         XCTAssertFalse(failed.message?.trimmed.isEmpty ?? true)
     }
 
     func testResendWordingFollowsTheWebsite() {
-        XCTAssertEqual(homeResendOutcome(ApiResult<OkResponse>.failure(ApiError(message: ""))).message, "Failed to resend verification email.")
-        XCTAssertEqual(homeResendOutcome(ApiResult<OkResponse>.failure(ApiError(message: "Too many requests."))).message, "Too many requests.")
+        XCTAssertEqual(resendOutcome(ApiResult<OkResponse>.failure(ApiError(message: ""))).message, "Failed to resend verification email.")
+        XCTAssertEqual(resendOutcome(ApiResult<OkResponse>.failure(ApiError(message: "Too many requests."))).message, "Too many requests.")
     }
 
     func testTheHomeContentShowsWithoutWaitingForTheStudentsSlowerCalls() async {

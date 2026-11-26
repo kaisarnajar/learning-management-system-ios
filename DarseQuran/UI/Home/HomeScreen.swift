@@ -254,7 +254,7 @@ private struct UnreadBadge: View {
     let count: Int
     var body: some View {
         Text(count > 9 ? "9+" : "\(count)")
-            .font(.custom(FontName.sansMedium, size: 11))
+            .textStyle(Typo.labelSmall)
             .foregroundStyle(Color.black)
             .padding(.horizontal, 4)
             .frame(minWidth: 16, minHeight: 16)
@@ -331,13 +331,13 @@ private struct ActionCardView: View {
 
 /// The website's "Resend Verification Email" button, under the verify-email card, with its outcome.
 private struct VerifyEmailResend: View {
-    let state: HomeResendState
+    let state: ResendState
     let onResend: () -> Void
 
     var body: some View {
         let enabled = !state.sending && !state.sent
         VStack(alignment: .leading, spacing: 0) {
-            TextButton(homeResendLabel(state), color: enabled ? Scheme.primary : Scheme.onSurface.opacity(0.38), action: onResend)
+            TextButton(resendLabel(state), color: enabled ? Scheme.primary : Scheme.onSurface.opacity(0.38), action: onResend)
                 .disabled(!enabled)
             if let message = state.message {
                 Text(message)

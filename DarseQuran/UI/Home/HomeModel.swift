@@ -12,36 +12,6 @@ struct ActionCard: Equatable, Sendable {
     var courseTitle: String? = nil
 }
 
-// MARK: - resending the verification e-mail
-
-/// The website's VerificationBanner states: idle, sending, or the answer to the last resend.
-///
-/// Home's own copy of Android's ui/account/ResendState.kt (the Account area owns the original); named apart so the two
-/// can live in one module.
-struct HomeResendState: Equatable, Sendable {
-    var sending = false
-    var sent = false
-    var message: String? = nil
-}
-
-let homeVerificationSent =
-    "Verification email sent! Please check your Inbox. If you don't see it, check your Spam/Junk folder as well."
-
-/// The state after a resend answered with [result].
-func homeResendOutcome<T>(_ result: ApiResult<T>) -> HomeResendState {
-    switch result {
-    case .success: HomeResendState(sent: true, message: homeVerificationSent)
-    case .failure(let e): HomeResendState(message: e.message.trimmed.isEmpty ? "Failed to resend verification email." : e.message)
-    }
-}
-
-/// The button's words, as on the website.
-func homeResendLabel(_ state: HomeResendState) -> String {
-    if state.sending { return "Sending..." }
-    if state.sent { return "Sent" }
-    return "Resend Verification Email"
-}
-
 // MARK: - the action cards
 
 /// The cards a student sees for their account, courses and payments (Android's HomeViewModel.loadNow, buildList).
@@ -96,7 +66,7 @@ final class HomeModel {
     private(set) var enrollments: [Enrollment] = []
     private(set) var actions: [ActionCard] = []
     private(set) var unread = 0
-    private(set) var resend = HomeResendState()
+    private(set) var resend = ResendState()
 
     @ObservationIgnored private let repo: AcademyRepository
     @ObservationIgnored private let auth: AuthRepository
@@ -137,11 +107,11 @@ final class HomeModel {
     func resendVerification() {
         guard let email = auth.sessionStore.current?.user.email else { return }
         if resend.sending || resend.sent { return }
-        resend = HomeResendState(sending: true)
+        resend = ResendState(sending: true)
         let auth = self.auth
         Task {
             let result = await auth.resendVerification(email: email)
-            resend = homeResendOutcome(result)
+            resend = resendOutcome(result)
         }
     }
 
