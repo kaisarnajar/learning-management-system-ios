@@ -92,7 +92,12 @@ struct ProfilePhoto: View {
             item = nil
             Task {
                 let data = try? await new.loadTransferable(type: Data.self)
-                picked(data.flatMap(UIImage.init(data:)))
+                // A chosen photo that can't be read says so (only a cancelled camera stays silent).
+                guard let image = data.flatMap(UIImage.init(data:)) else {
+                    toaster.show("That photo couldn't be read. Try another one.", long: true)
+                    return
+                }
+                picked(image)
             }
         }
     }
