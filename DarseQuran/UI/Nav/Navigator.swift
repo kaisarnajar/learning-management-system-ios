@@ -104,7 +104,7 @@ final class Navigator {
     func openLink(_ href: String) {
         switch linkTarget(href) {
         case .inApp(let path): if !openHref(path) { openWeb(path) }
-        case .outside(let url): openOutside(url)
+        case .outside(let url): openOutside(url, say: { [weak self] in self?.toast($0) })
         }
     }
 }

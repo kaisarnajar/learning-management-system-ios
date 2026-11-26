@@ -52,12 +52,18 @@ func outsideOpen(_ url: String) -> OutsideOpen {
 /// that handles them.
 @MainActor
 func openOutside(_ url: String, toast: Toaster? = nil) {
+    openOutside(url, say: { toast?.show($0) })
+}
+
+/// [openOutside], telling the user through [say] when no app can open the link (Android always toasts).
+@MainActor
+func openOutside(_ url: String, say: @escaping @MainActor (String) -> Void) {
     switch outsideOpen(url) {
     case .web(let web): openWeb(web)
     case .phoneApp(let uri):
         guard let target = URL(string: uri) else { return }
         UIApplication.shared.open(target) { opened in
-            if !opened { Task { @MainActor in toast?.show("No app on this phone can open this link.") } }
+            if !opened { Task { @MainActor in say("No app on this phone can open this link.") } }
         }
     case .ignored: break
     }
