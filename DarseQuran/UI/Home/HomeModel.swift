@@ -138,7 +138,7 @@ final class HomeModel {
         async let unread: Int = signedIn ? (await repo.notifications(page: 1, unreadOnly: true).value?.unreadCount ?? 0) : 0
 
         // A cold start shows the last run's home screen while the new one loads.
-        if content == nil, let saved = repo.lastHome() {
+        if content == nil, let saved = await repo.lastHome(), content == nil, gen == generation {
             content = saved
             loading = false
         }

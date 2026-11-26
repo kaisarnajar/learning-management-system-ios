@@ -61,7 +61,12 @@ final class AcademyRepository: Sendable {
     }
 
     /// The home screen to show while [home] loads: this run's, else the one saved by the last run on this server.
-    func lastHome() -> HomeResponse? { cachedHome() ?? savedHome?(CurrentEnvironment.value).read() }
+    /// The file is read off the main thread (Android: Dispatchers.IO).
+    func lastHome() async -> HomeResponse? {
+        if let cached = cachedHome() { return cached }
+        guard let saved = savedHome?(CurrentEnvironment.value) else { return nil }
+        return await Task.detached(priority: .userInitiated) { saved.read() }.value
+    }
 
     // MARK: catalogue & content
     func courses(page: Int, search: String?, category: String? = nil) async -> ApiResult<Paged<Course>> {
