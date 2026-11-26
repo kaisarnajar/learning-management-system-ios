@@ -2,6 +2,36 @@ import SwiftUI
 
 /// Material 3's OutlinedTextField: a 1pt outline (2pt primary when focused), the label inside until there is text or
 /// focus, then floating on the outline; supporting or error text below.
+// MARK: - fields whose binding filters the text
+
+extension Binding where Value == String {
+    /// For a TextField whose binding may refuse or trim an edit (a length cap, digits only, two decimals): the field
+    /// shows [shown] while typing, and `.correctsRefusedEdits` puts it back to the stored text when the edit wasn't
+    /// kept. Without it SwiftUI keeps showing the refused text, because the stored value never changed (Compose's
+    /// field always redraws from its value).
+    func shown(_ shown: Binding<String?>) -> Binding<String> {
+        Binding(get: { shown.wrappedValue ?? wrappedValue }, set: { shown.wrappedValue = $0; wrappedValue = $0 })
+    }
+}
+
+private struct CorrectsRefusedEdits: ViewModifier {
+    let text: String
+    @Binding var shown: String?
+
+    func body(content: Content) -> some View {
+        content
+            .onChange(of: text) { shown = nil }
+            .onChange(of: shown) { _, new in if let new, new != text { shown = text } }
+    }
+}
+
+extension View {
+    /// See `Binding.shown(_:)`.
+    func correctsRefusedEdits(text: String, shown: Binding<String?>) -> some View {
+        modifier(CorrectsRefusedEdits(text: text, shown: shown))
+    }
+}
+
 struct OutlinedField: View {
     let label: String
     @Binding var text: String
@@ -21,6 +51,7 @@ struct OutlinedField: View {
 
     @FocusState private var focused: Bool
     @State private var revealed = false
+    @State private var shown: String? = nil
     @Environment(\.fieldSurface) private var surface
 
     private var floating: Bool { focused || !text.isEmpty }
@@ -82,13 +113,14 @@ struct OutlinedField: View {
     @ViewBuilder private var input: some View {
         Group {
             if secure && !revealed {
-                SecureField("", text: $text)
+                SecureField("", text: $text.shown($shown))
             } else if let lines {
-                TextField("", text: $text, axis: .vertical).lineLimit(lines)
+                TextField("", text: $text.shown($shown), axis: .vertical).lineLimit(lines)
             } else {
-                TextField("", text: $text)
+                TextField("", text: $text.shown($shown))
             }
         }
+        .correctsRefusedEdits(text: text, shown: $shown)
         .textStyle(Typo.bodyLarge)
         .foregroundStyle(Scheme.onSurface)
         .tint(Scheme.primary)

@@ -307,6 +307,7 @@ private struct CommentField: View {
     let canPost: Bool
     let onPost: () -> Void
     @FocusState private var focused: Bool
+    @State private var shown: String? = nil
 
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: Radius.xs)
@@ -315,7 +316,8 @@ private struct CommentField: View {
                 if text.isEmpty {
                     Text("Write a comment").textStyle(Typo.bodyLarge).foregroundStyle(Scheme.onSurfaceVariant).allowsHitTesting(false)
                 }
-                TextField("", text: Binding(get: { text }, set: { text = String($0.prefix(2000)) }), axis: .vertical)
+                TextField("", text: Binding(get: { text }, set: { text = $0.jsPrefix(2000) }).shown($shown), axis: .vertical)
+                    .correctsRefusedEdits(text: text, shown: $shown)
                     .lineLimit(1...5)
                     .textStyle(Typo.bodyLarge)
                     .foregroundStyle(Scheme.onSurface)

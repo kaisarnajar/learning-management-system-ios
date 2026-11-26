@@ -251,11 +251,14 @@ private struct CourseMarksField: View {
     let max: Int?
     let isError: Bool
     @FocusState private var focused: Bool
+    @State private var shown: String? = nil
 
     var body: some View {
         let outline = isError ? Scheme.error : (focused ? Scheme.primary : Scheme.outline)
         HStack(spacing: 2) {
-            TextField("", text: $text, prompt: Text("—").foregroundStyle(Scheme.onSurfaceVariant))
+            // A third decimal or a letter is refused (setMarks), and the field shows what is kept.
+            TextField("", text: $text.shown($shown), prompt: Text("—").foregroundStyle(Scheme.onSurfaceVariant))
+                .correctsRefusedEdits(text: text, shown: $shown)
                 .textStyle(Typo.bodyLarge)
                 .foregroundStyle(Scheme.onSurface)
                 .keyboardType(.decimalPad)
