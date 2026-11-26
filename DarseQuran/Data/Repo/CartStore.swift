@@ -122,17 +122,22 @@ final class CartStore {
 
     /// After an order: the server empties the whole cart, so the books that were left out of it ([left]) are put back,
     /// as the website keeps them in the cart. Everything is selected again. Returns how many couldn't be put back.
+    ///
+    /// It finishes even if the caller is cancelled (Android runs it NonCancellable): the order is placed by then, and
+    /// stopping halfway would drop the left-out books from the cart without a word.
     func afterOrder(_ left: [CartLine]) async -> Int {
-        let failed = await sending.withLock {
-            var failed = 0
-            for line in left {
-                if case .failure = await repo.setCartLine(bookId: line.bookId, quantity: line.quantity) { failed += 1 }
+        await Task { @MainActor in
+            let failed = await sending.withLock {
+                var failed = 0
+                for line in left {
+                    if case .failure = await repo.setCartLine(bookId: line.bookId, quantity: line.quantity) { failed += 1 }
+                }
+                return failed
             }
+            unselected = []
+            await refresh()
             return failed
-        }
-        unselected = []
-        await refresh()
-        return failed
+        }.value
     }
 
     func quantityOf(_ bookId: String) -> Int { items.first { $0.bookId == bookId }?.quantity ?? 0 }
