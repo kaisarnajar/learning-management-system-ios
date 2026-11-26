@@ -112,7 +112,7 @@ final class HomeModel {
         loading = cached == nil
         session = auth.sessionStore.current
         loadedFor = session?.user.id
-        auth.sessionStore.observe { [weak self] value in
+        auth.sessionStore.observe(owner: self) { [weak self] value in
             Task { @MainActor in self?.sessionChanged(value) }
         }
         load()

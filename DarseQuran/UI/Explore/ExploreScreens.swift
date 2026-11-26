@@ -96,7 +96,7 @@ final class BlogPostModel {
         loadedFor = auth.sessionStore.current?.user.id
         load()
         // "Liked by me" and comment rights depend on who is signed in: reload when that changes.
-        auth.sessionStore.observe { [weak self] value in
+        auth.sessionStore.observe(owner: self) { [weak self] value in
             Task { @MainActor in self?.sessionChanged(value?.user.id) }
         }
     }

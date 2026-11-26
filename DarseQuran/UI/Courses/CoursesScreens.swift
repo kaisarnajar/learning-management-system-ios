@@ -26,7 +26,7 @@ final class CoursesModel {
         signedIn = userId != nil
         loadMine()
         // A token refresh saves a new session for the same user: only a different user (or none) needs a reload.
-        auth.sessionStore.observe { [weak self] session in
+        auth.sessionStore.observe(owner: self) { [weak self] session in
             let id = session?.user.id
             Task { @MainActor in self?.userChanged(id) }
         }
@@ -293,7 +293,7 @@ final class CourseDetailModel {
         signedIn = userId != nil
         load()
         // Enrolled or not, and what to pay, depend on who is signed in: signing in from "Sign in to apply" must show it.
-        auth.sessionStore.observe { [weak self] session in
+        auth.sessionStore.observe(owner: self) { [weak self] session in
             let id = session?.user.id
             Task { @MainActor in self?.userChanged(id) }
         }

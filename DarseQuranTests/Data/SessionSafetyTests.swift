@@ -55,6 +55,20 @@ final class SessionSafetyTests: XCTestCase {
     }
 }
 
+/// Observers that belong to a screen's model end with it (Android: the collector ends with viewModelScope).
+final class SessionObserverTests: XCTestCase {
+    func testAnObserverIsDroppedOnceItsOwnerIsGone() {
+        let store = SessionStore(store: MemoryStore(), initialEnvironment: .staging)
+        store.observe { _ in } // the app's own, for its whole life
+        var owner: NSObject? = NSObject()
+        store.observe(owner: owner) { _ in }
+        XCTAssertEqual(2, store.observerCount)
+        owner = nil
+        store.save(TokenResponse(accessToken: "a", refreshToken: "r", user: SessionUser(id: "u1", email: "one@example.test")))
+        XCTAssertEqual(1, store.observerCount)
+    }
+}
+
 /// A fresh install starts signed out (Keychain items outlive an uninstall; Android's data doesn't).
 final class FreshInstallTests: XCTestCase {
     func testAFreshInstallForgetsSessionsLeftInTheKeychainButOnlyOnce() throws {

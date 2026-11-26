@@ -38,7 +38,15 @@ final class SessionStore: SessionSource, @unchecked Sendable {
     private let lock = NSLock()
     private var env: AppEnvironment
     private var session: Session?
-    private var observers: [@Sendable (Session?) -> Void] = []
+    private var observers: [Observer] = []
+
+    /// An observer and, for one that belongs to a screen's model, that model: once it is gone the observer is dropped
+    /// (Android's collectors end with their viewModelScope).
+    private struct Observer {
+        weak var owner: AnyObject?
+        let ownerless: Bool
+        let call: @Sendable (Session?) -> Void
+    }
 
     init(store: SecureStore = KeychainStore(), initialEnvironment: AppEnvironment, clock: @escaping @Sendable () -> Date = Date.init) {
         self.store = store
@@ -51,13 +59,20 @@ final class SessionStore: SessionSource, @unchecked Sendable {
     var environment: AppEnvironment { lock.withLock { env } }
 
     /// [observer] is called (on whatever thread made the change) with every new session value.
-    func observe(_ observer: @escaping @Sendable (Session?) -> Void) {
-        lock.withLock { observers.append(observer) }
+    /// With an [owner], the observer is removed once the owner is deallocated.
+    func observe(owner: AnyObject? = nil, _ observer: @escaping @Sendable (Session?) -> Void) {
+        lock.withLock { observers.append(Observer(owner: owner, ownerless: owner == nil, call: observer)) }
     }
 
+    /// How many observers are still registered (for tests).
+    var observerCount: Int { lock.withLock { observers.removeAll { !$0.ownerless && $0.owner == nil }; return observers.count } }
+
     private func publish(_ value: Session?) {
-        let all = lock.withLock { observers }
-        all.forEach { $0(value) }
+        let all = lock.withLock {
+            observers.removeAll { !$0.ownerless && $0.owner == nil }
+            return observers
+        }
+        all.forEach { $0.call(value) }
     }
 
     private static func read(_ store: SecureStore, _ env: AppEnvironment) -> Session? {
