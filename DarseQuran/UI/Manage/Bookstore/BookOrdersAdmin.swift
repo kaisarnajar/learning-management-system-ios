@@ -97,7 +97,9 @@ private struct BookOrderCard: View {
     let onChanged: () -> Void
 
     var body: some View {
-        AppCard(padding: 14, onClick: onOpen) {
+        // Not a Button card: its approve / decline / ship buttons would sit inside the card's own button, where VoiceOver
+        // can't reach them. A tap anywhere else, or VoiceOver's "Open order" action, opens the order.
+        AppCard(padding: 14) {
             HStack(alignment: .top, spacing: 0) {
                 VStack(alignment: .leading, spacing: 0) {
                     Text(order.customerName ?? "—").textStyle(Typo.titleSmall).fontWeight(.semibold).foregroundStyle(Scheme.onSurface)
@@ -124,11 +126,12 @@ private struct BookOrderCard: View {
                 Text("Courier: \(courier) · Tracking ID: \(order.trackingId ?? "—")").textStyle(Typo.bodySmall).foregroundStyle(Scheme.onSurfaceVariant)
             }
             Spacer().frame(height: 8)
-            BookstoreFlowRow(spacing: 8, lineSpacing: 4) {
-                if let proof = order.paymentScreenshotPath { BookstoreProofThumb(path: proof) }
-                BookOrderActions(id: order.id, status: order.status, runner: runner, onChanged: onChanged)
-            }
+            BookOrderActions(id: order.id, status: order.status, runner: runner, proofPath: order.paymentScreenshotPath, onChanged: onChanged)
         }
+        .contentShape(RoundedRectangle(cornerRadius: Radius.card, style: .continuous))
+        .onTapGesture(perform: onOpen)
+        .accessibilityElement(children: .contain)
+        .accessibilityAction(named: "Open order", onOpen)
     }
 
     private var addressText: String {
@@ -147,14 +150,18 @@ struct BookOrderActions: View {
     let id: String
     let status: String
     let runner: ActionRunner
+    /// The payment screenshot, shown first in the row on the list's cards.
+    var proofPath: String? = nil
     let onChanged: () -> Void
     @State private var confirm: BookOrderConfirm?
     @State private var shipping = false
     @State private var voiding = false
 
     var body: some View {
-        // One row (not a Group: a Group would give every button its own copy of the dialogs below).
-        HStack(spacing: 8) {
+        // One flow row (not a Group: a Group would give every button its own copy of the dialogs below). Each button is
+        // its own child so they wrap one at a time, like Android's FlowRow.
+        BookstoreFlowRow(spacing: 8, lineSpacing: 4) {
+            if let proofPath { BookstoreProofThumb(path: proofPath) }
             switch status {
             case "PENDING_VERIFICATION":
                 BookstoreCtaButton("Approve", enabled: !runner.busy) { confirm = .approve }
@@ -406,9 +413,7 @@ private struct BookOrderDetailContent: View {
                     }
                     Text("Placed \(formatDateTime(o.createdAt))").textStyle(Typo.bodySmall).foregroundStyle(Scheme.onSurfaceVariant)
                     if !o.deleted {
-                        BookstoreFlowRow(spacing: 8, lineSpacing: 4) {
-                            BookOrderActions(id: o.id, status: o.status, runner: model.runner) { model.loader.reload() }
-                        }
+                        BookOrderActions(id: o.id, status: o.status, runner: model.runner) { model.loader.reload() }
                     }
                 }
                 DetailCard("Customer & delivery") {
