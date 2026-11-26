@@ -9,12 +9,12 @@ struct ExploreScreen: View {
 
     var body: some View {
         let tiles: [(String, String, Icon, Route)] = [
-            ("Fatwa", "Questions answered by scholars", .fatwa, .fatwa),
-            ("Blog", "Articles from our teachers", .blog, .blog),
-            ("Library", "Books to read and download", .library, .library),
-            ("Bookstore", "Order printed books", .bookstore, .bookstore),
-            ("Announcements", "News and events", .announcement, .announcements),
-            ("Teachers", "Meet our scholars", .people, .teachers),
+            ("Fatwa", "Questions answered by scholars", .questionAnswerFilled, .fatwa),
+            ("Blog", "Articles from our teachers", .coursesFilled, .blog), // Material MenuBook
+            ("Library", "Books to read and download", .localLibraryFilled, .library),
+            ("Bookstore", "Order printed books", .storefrontFilled, .bookstore),
+            ("Announcements", "News and events", .campaignFilled, .announcements),
+            ("Teachers", "Meet our scholars", .groupsFilled, .teachers),
         ]
         VStack(spacing: 0) {
             TabTopBar("Explore")
@@ -51,6 +51,7 @@ private struct HubTile: View {
                     icon.image.font(.system(size: 20, weight: .medium)).foregroundStyle(Scheme.onPrimaryContainer)
                 }
                 .frame(width: 46, height: 46)
+                .accessibilityHidden(true)
                 Spacer(minLength: 0)
                 Text(title).textStyle(Typo.titleLarge).foregroundStyle(Scheme.onSurface).lineLimit(1).minimumScaleFactor(0.8)
                 Text(subtitle).textStyle(Typo.bodySmall).foregroundStyle(Scheme.onSurfaceVariant).lineLimit(2).multilineTextAlignment(.leading)
@@ -411,7 +412,7 @@ struct FatwaDetailScreen: View {
                             }
                             Spacer().frame(height: 20)
                             HStack(spacing: 8) {
-                                Icon.mosque.image.font(.system(size: 17)).foregroundStyle(Brand.gold).frame(width: 20, height: 20)
+                                Icon.mosque.image.font(.system(size: 17)).foregroundStyle(Brand.gold).frame(width: 20, height: 20).accessibilityHidden(true)
                                 Text("Answer").textStyle(Typo.titleLarge).foregroundStyle(Scheme.onSurface)
                             }
                             Spacer().frame(height: 4)
@@ -423,7 +424,6 @@ struct FatwaDetailScreen: View {
                         }
                         .padding(Spacing.screen)
                     }
-                    .refreshable { await loader.refresh() }
                 }
             }
         }
@@ -585,7 +585,7 @@ struct AnnouncementScreen: View {
                                 }
                                 if let location = a.location {
                                     HStack(spacing: 6) {
-                                        Icon.location.image.font(.system(size: 13)).foregroundStyle(Brand.gold).frame(width: 16, height: 16)
+                                        Icon.location.image.font(.system(size: 13)).foregroundStyle(Brand.gold).frame(width: 16, height: 16).accessibilityHidden(true)
                                         Text(location).textStyle(Typo.titleSmall).foregroundStyle(Scheme.onSurface)
                                     }
                                 }

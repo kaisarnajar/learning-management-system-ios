@@ -117,6 +117,12 @@ enum Icon: String {
     case image = "photo"
     case questionAnswer = "bubble.left.and.bubble.right"
     case groups = "person.3"
+    // Explore hub tiles (Material Rounded, filled)
+    case questionAnswerFilled = "bubble.left.and.bubble.right.fill"
+    case localLibraryFilled = "books.vertical.fill"
+    case storefrontFilled = "storefront.fill"
+    case campaignFilled = "megaphone.fill"
+    case groupsFilled = "person.3.fill"
     case eventAvailable = "calendar.badge.checkmark"
     case grading = "list.bullet.clipboard"
     // rich text toolbar

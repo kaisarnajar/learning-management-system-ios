@@ -311,7 +311,7 @@ private struct OrderCard: View {
         let (label, tone) = statusLabel(order.status, kind: .order)
         AppCard(onClick: onClick) {
             HStack(alignment: .center, spacing: 0) {
-                Icon.bookstore.image.font(.system(size: 20, weight: .medium)).foregroundStyle(Brand.gold)
+                Icon.bagFilled.image.font(.system(size: 20, weight: .medium)).foregroundStyle(Brand.gold).accessibilityHidden(true)
                 Spacer().frame(width: 10)
                 Text(orderNumber(order.id)).textStyle(Typo.titleMedium).foregroundStyle(Scheme.onSurface)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -360,7 +360,7 @@ private struct OrderContent: View {
                         if order.status == "SHIPPED" {
                             Banner(
                                 "Shipped with \(order.courierServiceName ?? "the courier")\(order.trackingId.map { " · tracking \($0)" } ?? "")",
-                                tone: .info, icon: .shipping
+                                tone: .info, icon: .localShipping
                             )
                         }
                         AppCard {

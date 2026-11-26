@@ -427,7 +427,7 @@ private struct ProfileCompleteStep: View {
         VStack(spacing: 12) {
             AppCard {
                 HStack(spacing: 8) {
-                    Icon.checkCircle.image.font(.system(size: 20)).foregroundStyle(Brand.success)
+                    Icon.checkCircle.image.font(.system(size: 20)).foregroundStyle(Brand.success).accessibilityHidden(true)
                     Text(profileCompleteTitle).textStyle(Typo.titleMedium).foregroundStyle(Scheme.onSurface)
                 }
                 Spacer().frame(height: 6)

@@ -152,7 +152,7 @@ private struct AskFatwaContent: View {
     var body: some View {
         DetailScaffold("Ask a question") {
             if model.done {
-                MessageState(icon: .fatwa, title: "Question sent", message: askFatwaSent, action: "Done") { nav.pop() }
+                MessageState(icon: .questionAnswer, title: "Question sent", message: askFatwaSent, action: "Done") { nav.pop() }
             } else {
                 form
             }
