@@ -152,7 +152,8 @@ private struct WaiverCard: View {
             Spacer().frame(height: 6)
             Text("Assigned Coupon").textStyle(Typo.labelSmall).foregroundStyle(Scheme.onSurfaceVariant)
             if let coupon = waiverCouponText(w) {
-                Text(coupon).font(.system(.body, design: .monospaced, weight: .bold)).foregroundStyle(Brand.success)
+                // .callout is 16pt like Android's bodyLarge and scales with Dynamic Type.
+                Text(coupon).font(.system(.callout, design: .monospaced, weight: .bold)).foregroundStyle(Brand.success)
                     .textSelection(.enabled)
             } else {
                 Text("—").textStyle(Typo.bodyLarge).foregroundStyle(Scheme.onSurfaceVariant)
