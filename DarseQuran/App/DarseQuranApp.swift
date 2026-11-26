@@ -1,18 +1,41 @@
+import GoogleSignIn
 import SwiftUI
 
 @main
 struct DarseQuranApp: App {
+    @State private var container: AppContainer
+
+    init() {
+        // Unit tests run inside the app: give them a container that touches neither the Keychain nor the network.
+        let testing = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+        _container = State(initialValue: testing ? AppContainer(secureStore: MemoryStore(), defaults: UserDefaults(suiteName: "tests") ?? .standard) : AppContainer())
+        Self.styleSystemControls()
+    }
+
     var body: some Scene {
         WindowGroup {
-            ZStack {
-                Scheme.background.ignoresSafeArea()
-                VStack(spacing: 12) {
-                    Image("Logo").resizable().frame(width: 96, height: 96).clipShape(Circle())
-                    Text("Darse Quran Academy").textStyle(Typo.headlineMedium).foregroundStyle(Scheme.onBackground)
-                    Text("Assalamu alaikum").textStyle(Typo.bodyLarge).foregroundStyle(Scheme.onSurfaceVariant)
-                    Text("بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ").textStyle(Typo.arabic).foregroundStyle(Brand.gold)
-                }
-            }
+            root
+                .environment(container)
+                .environment(container.toaster)
+                .environment(container.cart)
+                .preferredColorScheme(container.appearance.colorScheme)
+                .tint(Scheme.primary)
+                .onOpenURL { url in _ = GIDSignIn.sharedInstance.handle(url) }
         }
+    }
+
+    @ViewBuilder private var root: some View {
+        #if DEBUG
+        if ProcessInfo.processInfo.environment["DQA_GALLERY"] == "1" { DesignGallery() } else { AppRoot() }
+        #else
+        AppRoot()
+        #endif
+    }
+
+    /// Fonts for the few system controls the app keeps (alerts, menus, segmented pickers).
+    private static func styleSystemControls() {
+        let label = UIFont(name: FontName.sansMedium, size: 13) ?? .systemFont(ofSize: 13)
+        UISegmentedControl.appearance().setTitleTextAttributes([.font: label], for: .normal)
+        UIRefreshControl.appearance().tintColor = UIColor(Scheme.primary)
     }
 }
